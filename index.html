@@ -1,1 +1,149 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
 
+<!-- Libaries Loaded -->
+    <!-- D3 -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+
+    <!-- W3 -->
+    <script src="https://www.w3schools.com/lib/w3.js"></script>
+
+<!-- API's Integrated -->
+
+    <!-- GEE (Google Earth Engine) -->
+
+
+
+<!-- CSS Style -->
+    <style>
+
+    .tooltip {
+        position: absolute;
+        background-color: #fff;
+        padding: 10px;
+        border: 1px solid #046468;
+        border-radius: 5px;
+        pointer-events: none;
+        opacity: 0;
+        }
+
+        body {
+            font-family: "Roboto", helvetica, arial, sans-serif;
+            display: block;
+            margin: auto;
+            width: 100%;
+            text-align: center;
+            font-size: 20px;
+        }
+        h1 {
+        margin: 0px;
+        font-size: 30px;
+        font-weight: 400;
+        font-style:normal;
+        color: #fff;
+        text-transform:uppercase;
+        }
+        h2 {
+        margin: 2px;
+        font-size: 20px;
+        font-weight: 400;
+        font-style:normal;
+        color: #fff;
+        text-transform:uppercase;
+        }
+    
+            @keyframes scroll {
+                0% { transform: translateX(100%); }
+                100% { transform: translateX(-100%); }
+        }
+
+            .scrolling-text {
+                position: relative;
+                font-family: "Roboto", helvetica, sans-serif;
+                font-size: 20px;
+                white-space: nowrap;
+                overflow: hidden;
+                display: block;
+                color: #fff;
+        }
+
+            .scrolling-text p {
+                display: inline-block;
+                padding-left: 5%; /* Initial offset */
+                animation: scroll 50s linear infinite; /* Adjust the timing to control the speed */
+        }
+
+        a {
+        color: black;
+    }
+
+    </style>
+
+<!-- Background Style -->
+//<body style="background-color: #081129;">
+
+<!-- Windows/Elements where the maps and Graphs will take place -->
+<svg id="Mp1_Atlas" width="500" height="300"></svg>
+<svg id="Video" width="500" height="300"></svg>
+<svg id="Graphs" width="500" height="300"></svg>
+<svg id="Mp2_Coast" width="500" height="300"></svg>
+
+
+
+
+
+<!--JS Script-->
+<script>
+// -------------------------------------- Div 1:: id: Mp1_Atlas----------------------------------------------
+    // The svg
+    //var svg = d3.select("svg"),
+    var svgAtlas = d3.select("#Mp1_Atlas").append("svg")
+        width = +svgAtlas.attr("width"),
+        height = +svgAtlas.attr("height");
+    
+    // Map and projection
+    var projection = d3.geoMercator()
+        .center([2, 47])                // GPS of location to zoom on
+        .scale(980)                       // This is like the zoom
+        .translate([ width/2, height/2 ])
+    
+    // Load external data and boot
+    d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson", function(data){
+        //console.log(data); 
+    
+        // Filter data
+        //data.features = data.features.filter(function(d){console.log(d.properties.name) ; return d.properties.name=="Poland"})
+    
+        // Filter data
+        data.features = data.features.filter(function(d){console.log(d.properties.name) ; return d.properties.name=="France"})
+    
+
+        
+        // Draw the map
+        svgAtlas.append("g")
+            .selectAll("path")
+            .data(data.features)
+            .enter()
+            .append("path")
+              .attr("fill", "#4f6eb3") // colour is light blue
+              .attr("d", d3.geoPath()
+                  .projection(projection)
+              )
+            .style("stroke", "white")
+    })
+    
+
+    // -----------------------------------------Div 2:: id: Video----------------------------------------------
+
+
+
+    // ---------------------------------------Div 3:: id: Graphs----------------------------------------------
+
+
+
+    // --------------------------------------Div 4:: id: Mp2_Coast----------------------------------------------
+
+
+    </script>
