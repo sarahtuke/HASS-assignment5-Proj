@@ -4,6 +4,7 @@
 <!-- Libaries Loaded -->
     <!-- D3 -->
     <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script> 
     <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
     <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
 
@@ -79,17 +80,29 @@
         color: black;
     }
 
+        body {
+        margin: 50;
+        }
+
     </style>
 
 <!-- Background Style -->
-//<body style="background-color: #081129;">
+    <body style="background-color: #081129;">
 
-<!-- Windows/Elements where the maps and Graphs will take place -->
-<svg id="Mp1_Atlas" width="500" height="300"></svg>
-<svg id="Video" width="500" height="300"></svg>
-<svg id="Graphs" width="500" height="300"></svg>
-<svg id="Mp2_Coast" width="500" height="300"></svg>
+<!-- Containers: where the maps and Graphs will take place
+    <div id="Mp1_Atlas" width="500" height="300" class="w3-center"></div> 
+    <svg id="Mp1_Atlas" width="1400" height="900" viewBox="0 0 1400 900" class="w3-center"></svg>
+-->
+    <svg id="Mp1_Atlas"></svg>
+    
+    <!--
+    <div id="Video" width="500" height="300"></div>
+    <div id="Graphs" width="500" height="300"></div>
+    <div id="Mp2_Coast" width="500" height="300"></div>
+    -->
 
+<!--Define Tooltip -->
+    <div class="tooltip"></div>
 
 
 
@@ -97,42 +110,67 @@
 <!--JS Script-->
 <script>
 // -------------------------------------- Div 1:: id: Mp1_Atlas----------------------------------------------
-    // The svg
-    //var svg = d3.select("svg"),
-    var svgAtlas = d3.select("#Mp1_Atlas").append("svg")
-        width = +svgAtlas.attr("width"),
-        height = +svgAtlas.attr("height");
-    
-    // Map and projection
-    var projection = d3.geoMercator()
-        .center([2, 47])                // GPS of location to zoom on
-        .scale(980)                       // This is like the zoom
-        .translate([ width/2, height/2 ])
-    
-    // Load external data and boot
-    d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson", function(data){
-        //console.log(data); 
-    
-        // Filter data
-        //data.features = data.features.filter(function(d){console.log(d.properties.name) ; return d.properties.name=="Poland"})
-    
-        // Filter data
-        data.features = data.features.filter(function(d){console.log(d.properties.name) ; return d.properties.name=="France"})
+
+//dimensions
+let width = 1000, height = 600;
+
+let svgAtlas = d3.select("#Mp1_Atlas")
+    .attr("viewBox", "0 0 " + width+ " " + height)
+    //.attr("width", 1400)
+    //.attr("height", 900)
     
 
-        
-        // Draw the map
-        svgAtlas.append("g")
-            .selectAll("path")
-            .data(data.features)
-            .enter()
-            .append("path")
-              .attr("fill", "#4f6eb3") // colour is light blue
-              .attr("d", d3.geoPath()
-                  .projection(projection)
-              )
-            .style("stroke", "white")
+// Map and projection
+let projection = d3.geoMercator()
+    //d3.geoEquirectangular()
+        //.center([1.357868, 103.810847]) //Center to Singapore
+        .center([105, -5]) // Rough central point for Southeast Asia
+        .scale(700)
+        .translate([(width/2)-150, (height/2)+125])
+
+let geopath = d3.geoPath().projection(projection);
+
+// Load GeoJSON data
+d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(data => {
+
+       // Filter to include only Southeast Asian countries
+       data.features = data.features.filter(function(d) {console.log(d.properties.name); 
+        return ["Indonesia", "Malaysia", "Philippines", "Singapore", "Thailand", 
+                "Brunei", "Vietnam", "Laos", "Myanmar", "Cambodia"]
+                .includes(d.properties.name);
+                
+    });
+
+    // Draw the map
+    svgAtlas.append("g")
+        .attr("id", "countries")
+        .selectAll("path")
+        .data(data.features)
+        .enter()
+        .append("path")
+            .attr("d",  d => geopath(d))
+            .attr("fill", "#777")
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 0.5)
+            
+
+//ToolTip 
+
+    .on("mouseover", (event, d) => {
+        d3.select(".tooltip")
+        .text(d.properties.name)
+        .style("position", "absolute")
+        .style("background", "#fff")
+        .style("left", (event.pageX) + "px")
+        .style("top", (event.pageY) + "px");
     })
+    .on("mouseout", (event, d) => {
+        d3.select(".tooltip")
+        .text("");
+    })
+
+        })
+
     
 
     // -----------------------------------------Div 2:: id: Video----------------------------------------------
