@@ -9,7 +9,7 @@ const app = express();
 app.get('/data', async (req, res) => {
   // Authenticate with GEE (if not done earlier)
   // ... (authentication code)
-  key = AIzaSyDzheZYXxSWcotuLyipevsXU05BEung5Qw
+
 
   // Define your GEE code to process data
   const geeFunction = async () => {
