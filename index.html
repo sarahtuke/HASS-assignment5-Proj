@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 
+
+<html>
+
+
+<!--Source Codes-->
+<script  src = "C:\Users\sarah\OneDrive\01_2024 Works\01_SUTD\TRIMESTER II\Interactive Data Visulisation\ASSIGNMENT 5 - FINAL\config.js" ></script>
+
+
+<!-- Installs -->
+<script>
+    //require('dotenv').config();
+
+    //GEE (Google Earth Engine)
+
+  //const apiKeyGEE = process.env.API_KEY-GEE; // Refers to Location of API Key 
+    const apiKeyGEE = config.API_KEYGEE;
+        //const ee = require('@google/earthengine');
+
+     </script> 
+
+
 <!-- Libaries Loaded -->
     <!-- D3 -->
     <script src="https://d3js.org/d3.v4.js"></script>
@@ -11,9 +32,27 @@
     <!-- W3 -->
     <script src="https://www.w3schools.com/lib/w3.js"></script>
 
+    <!-- GEE -->
+    <script src="C:\Users\sarah\node_modules\@google\earthengine\src"></script>
+
 <!-- API's Integrated -->
 
     <!-- GEE (Google Earth Engine) -->
+    <script>
+        // Integration after Library Loaded
+        ee.data.authenticateViaApiKey(apiKeyGEE, () => {
+          console.log('Authentication successful');
+          ee.initialize(null, null, () => {
+            console.log('Earth Engine client initialized');
+            // Earth Engine API is now active
+          }, (err) => {
+            console.error('GEE Initialization error: ' + err);
+          });
+        }, (err) => {
+          console.error('GEE Authentication error: ' + err);
+        });
+      </script>
+ 
 
 
 
@@ -94,9 +133,11 @@
     <svg id="Mp1_Atlas" width="1400" height="900" viewBox="0 0 1400 900" class="w3-center"></svg>
 -->
     <svg id="Mp1_Atlas"></svg>
+    <div id="Graphs" width="500" height="300"></div>
     
     <!--
     <div id="Video" width="500" height="300"></div>
+
     <div id="Graphs" width="500" height="300"></div>
     <div id="Mp2_Coast" width="500" height="300"></div>
     -->
@@ -105,83 +146,157 @@
     <div class="tooltip"></div>
 
 
+<body>
 
+    <!--JS Script-->
+    <script>
+    // -------------------------------------- Div 1:: id: Mp1_Atlas----------------------------------------------
 
-<!--JS Script-->
-<script>
-// -------------------------------------- Div 1:: id: Mp1_Atlas----------------------------------------------
+    //dimensions
+    let width = 1000, height = 600;
 
-//dimensions
-let width = 1000, height = 600;
+    let svgAtlas = d3.select("#Mp1_Atlas")
+        .attr("viewBox", "0 0 " + width+ " " + height)
+        //.attr("width", 1400)
+        //.attr("height", 900)
+        
 
-let svgAtlas = d3.select("#Mp1_Atlas")
-    .attr("viewBox", "0 0 " + width+ " " + height)
-    //.attr("width", 1400)
-    //.attr("height", 900)
-    
+    // Map and projection
+    let projection = d3.geoMercator()
+        //d3.geoEquirectangular()
+            //.center([1.357868, 103.810847]) //Center to Singapore
+            .center([105, -5]) // Rough central point for Southeast Asia
+            .scale(700)
+            .translate([(width/2)-150, (height/2)+125])
 
-// Map and projection
-let projection = d3.geoMercator()
-    //d3.geoEquirectangular()
-        //.center([1.357868, 103.810847]) //Center to Singapore
-        .center([105, -5]) // Rough central point for Southeast Asia
-        .scale(700)
-        .translate([(width/2)-150, (height/2)+125])
+    let geopath = d3.geoPath().projection(projection);
 
-let geopath = d3.geoPath().projection(projection);
+    // Load GeoJSON data
+    d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(data => {
 
-// Load GeoJSON data
-d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(data => {
+        // Filter to include only Southeast Asian countries
+        //data.features = data.features.filter(function(d) {console.log(d.properties.name);
+        data.features = data.features.filter(function(d) {   
+            return ["Indonesia", "Malaysia", "Philippines", "Singapore", "Thailand", 
+                    "Brunei", "Vietnam", "Laos", "Myanmar", "Cambodia"]
+                    .includes(d.properties.name);
+                    
+        });
 
-       // Filter to include only Southeast Asian countries
-       data.features = data.features.filter(function(d) {console.log(d.properties.name); 
-        return ["Indonesia", "Malaysia", "Philippines", "Singapore", "Thailand", 
-                "Brunei", "Vietnam", "Laos", "Myanmar", "Cambodia"]
-                .includes(d.properties.name);
+        // Draw the map
+        svgAtlas.append("g")
+            .attr("id", "countries")
+            .selectAll("path")
+            .data(data.features)
+            .enter()
+            .append("path")
+                .attr("d",  d => geopath(d))
+                .attr("fill", "#777")
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 0.5)
                 
-    });
 
-    // Draw the map
-    svgAtlas.append("g")
-        .attr("id", "countries")
-        .selectAll("path")
-        .data(data.features)
-        .enter()
-        .append("path")
-            .attr("d",  d => geopath(d))
-            .attr("fill", "#777")
-            .attr("stroke", "#fff")
-            .attr("stroke-width", 0.5)
+    //ToolTip 
+    /*
+        .on("mouseover", (event, d) => {
+            d3.select(".tooltip")
+            .text(d.properties.name)
+            .style("position", "absolute")
+            .style("background", "#fff")
+            .style("left", (event.pageX) + "px")
+            .style("top", (event.pageY) + "px");
+        })
+        .on("mouseout", (event, d) => {
+            d3.select(".tooltip")
+            .text("");
+        })
+        */
+
+        // Event handlers: update tooltip relative to mouse pointer
+        //turning on the mouuse-over fucntion
+        .on("mouseover", (event, d) => {
+            const centroid = geopath.centroid(d);
+            const [x, y] = centroid;
             
 
-//ToolTip 
+        d3.select(event.currentTarget)
+        .classed("highlighted", true)
+        //.attr("transform",`translate(${x * (1 - scale)}, ${y * (1- scale)}) scale(${scale}, ${scale})`)
+        .raise(); // Raise section above projection
 
-    .on("mouseover", (event, d) => {
-        d3.select(".tooltip")
-        .text(d.properties.name)
-        .style("position", "absolute")
-        .style("background", "#fff")
-        .style("left", (event.pageX) + "px")
-        .style("top", (event.pageY) + "px");
-    })
-    .on("mouseout", (event, d) => {
-        d3.select(".tooltip")
-        .text("");
-    })
 
-        })
+        //making the mouse-over function link to the tooltip
+        //d3.select(".tooltip")
+        tooltip.style("opacity", 1)
+            .html(`<strong>${d.properties.name}</strong>`)
+            .style("display", "block")
+            .style("left", event.pageX + 60 + "px")
+            .style("top", event.pageY - 60 + "px");
+            })
+            .on("mouseout", (event, d) => {
+                d3.select(event.currentTarget)
+                .classed("highlighted", false)
+                .attr("transform", "translate(0, 0) scale(1, 1)");
 
+                d3.select(".tooltip").style("display", "none");
+            });
+
+
+        
+    // Filter to include all countries
+        data.all = data.features.filter(function(d) {console.log(d.properties.name); 
+            return includes(d.properties.name);
+                    
+        });
+
+        // Draw the map
+        svgAtlas.append("g")
+            .attr("id", "countries")
+            .selectAll("path")
+            .data(data.all)
+            .enter()
+            .append("path")
+                .attr("d",  d => geopath(d))
+                .attr("fill", "#777")
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 0.5)
     
+            //end of data access
+            })
 
-    // -----------------------------------------Div 2:: id: Video----------------------------------------------
+        </script>
+
+    <!-- <h2 class="w3-center">--&nbsp;*&nbsp;--</h2> -->
+        <!-------------------------------------------Div 2:: id: Video------------------------------------------------> 
+
+    <h2 class="w3-center">--&nbsp;*&nbsp;--</h2>
+
+        <!-------------------------------------------Div 3:: id: Graphs-------------------------------------------------> 
+
+   <!-- <svg width="1000" height="2000" xmlns="http://www.w3.org/2000/svg"  class="w3-center">      </svg> -->
+        <rect width="900" height="3200" x="10" y="10" rx="20" ry="20" fill="#354b79" class="w3-center"/>
+
+            <div class="w3-center" style="position: relative;">
+                <img src="Image Examples_Graphs .png" alt="LA" style="width:50%; opacity: 0.8;">
+            
+            </div>
+   
+
+    <h2 class="w3-center">--&nbsp;*&nbsp;--</h2>
+
+        <!-------------------------------------------Div 4:: id: Mp2_Coast-----------------------------------------------> 
+           
+        <div class="w3-center" style="position: relative;">
+                <img src="Image Examples_SVG Maps .png" alt="LA" style="width: 50%; opacity: 0.8;">
+            
+            </div>
+        
+    
+        
 
 
 
-    // ---------------------------------------Div 3:: id: Graphs----------------------------------------------
 
+</body>
+</html>
 
-
-    // --------------------------------------Div 4:: id: Mp2_Coast----------------------------------------------
-
-
-    </script>
